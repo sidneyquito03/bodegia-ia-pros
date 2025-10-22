@@ -14,7 +14,172 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      clientes: {
+        Row: {
+          celular: string | null
+          created_at: string | null
+          deuda_total: number
+          id: string
+          nombre: string
+          updated_at: string | null
+        }
+        Insert: {
+          celular?: string | null
+          created_at?: string | null
+          deuda_total?: number
+          id?: string
+          nombre: string
+          updated_at?: string | null
+        }
+        Update: {
+          celular?: string | null
+          created_at?: string | null
+          deuda_total?: number
+          id?: string
+          nombre?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      operadores: {
+        Row: {
+          activo: boolean
+          celular: string
+          created_at: string | null
+          id: string
+          nombre: string
+        }
+        Insert: {
+          activo?: boolean
+          celular: string
+          created_at?: string | null
+          id?: string
+          nombre: string
+        }
+        Update: {
+          activo?: boolean
+          celular?: string
+          created_at?: string | null
+          id?: string
+          nombre?: string
+        }
+        Relationships: []
+      }
+      productos: {
+        Row: {
+          categoria: string
+          codigo: string
+          created_at: string | null
+          estado: string
+          id: string
+          nombre: string
+          precio_costo: number
+          precio_venta: number
+          stock: number
+          updated_at: string | null
+        }
+        Insert: {
+          categoria: string
+          codigo: string
+          created_at?: string | null
+          estado?: string
+          id?: string
+          nombre: string
+          precio_costo: number
+          precio_venta: number
+          stock?: number
+          updated_at?: string | null
+        }
+        Update: {
+          categoria?: string
+          codigo?: string
+          created_at?: string | null
+          estado?: string
+          id?: string
+          nombre?: string
+          precio_costo?: number
+          precio_venta?: number
+          stock?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      transacciones_fiados: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          descripcion: string | null
+          estado: string
+          id: string
+          monto: number
+          tipo: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          estado?: string
+          id?: string
+          monto: number
+          tipo: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          descripcion?: string | null
+          estado?: string
+          id?: string
+          monto?: number
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transacciones_fiados_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ventas: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          id: string
+          items: Json
+          subtotal: number
+          tipo: string
+          total: number
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          items: Json
+          subtotal: number
+          tipo: string
+          total: number
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          items?: Json
+          subtotal?: number
+          tipo?: string
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ventas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
