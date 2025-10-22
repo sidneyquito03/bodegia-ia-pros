@@ -2,6 +2,7 @@ import { Layout } from "@/components/Layout";
 import { KPICard } from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChatbotWidget } from "@/components/ChatbotWidget";
 import { DollarSign, TrendingUp, Package } from "lucide-react";
 
 const Reportes = () => {
@@ -111,6 +112,8 @@ const Reportes = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ChatbotWidget />
     </Layout>
   );
 };

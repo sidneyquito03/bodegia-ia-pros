@@ -1,26 +1,95 @@
+import { useState } from "react";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Mic, Plus, Minus, Trash2 } from "lucide-react";
+import { ChatbotWidget } from "@/components/ChatbotWidget";
+import { Search, Plus, Minus, Trash2 } from "lucide-react";
+import { useInventario } from "@/hooks/useInventario";
+import { useVentas, ItemVenta } from "@/hooks/useVentas";
+import { useFiados } from "@/hooks/useFiados";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const POS = () => {
-  const productos = [
-    { id: 1, nombre: "Inca Kola 1.5L", precio: 5.00, categoria: "Bebidas" },
-    { id: 2, nombre: "Pan Bimbo", precio: 6.00, categoria: "Panadería" },
-    { id: 3, nombre: "Leche Gloria", precio: 5.50, categoria: "Lácteos" },
-    { id: 4, nombre: "Arroz Superior", precio: 4.50, categoria: "Abarrotes" },
-    { id: 5, nombre: "Aceite Primor", precio: 12.00, categoria: "Abarrotes" },
-    { id: 6, nombre: "Azúcar Blanca", precio: 3.80, categoria: "Abarrotes" },
-  ];
+  const { productos } = useInventario();
+  const { registrarVenta, loading } = useVentas();
+  const { clientes } = useFiados();
+  const [carrito, setCarrito] = useState<ItemVenta[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [fiadoDialogOpen, setFiadoDialogOpen] = useState(false);
+  const [clienteSeleccionado, setClienteSeleccionado] = useState('');
 
-  const carrito = [
-    { id: 1, nombre: "Inca Kola 1.5L", precio: 5.00, cantidad: 2 },
-    { id: 2, nombre: "Pan Bimbo", precio: 6.00, cantidad: 1 },
-  ];
+  const productosFiltrados = productos.filter(p =>
+    p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.codigo.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const agregarAlCarrito = (producto: any) => {
+    const existe = carrito.find(item => item.producto_id === producto.id);
+    if (existe) {
+      setCarrito(carrito.map(item =>
+        item.producto_id === producto.id
+          ? { ...item, cantidad: item.cantidad + 1 }
+          : item
+      ));
+    } else {
+      setCarrito([...carrito, {
+        producto_id: producto.id,
+        nombre: producto.nombre,
+        cantidad: 1,
+        precio: producto.precio_venta
+      }]);
+    }
+  };
+
+  const actualizarCantidad = (producto_id: string, nuevaCantidad: number) => {
+    if (nuevaCantidad <= 0) {
+      setCarrito(carrito.filter(item => item.producto_id !== producto_id));
+    } else {
+      setCarrito(carrito.map(item =>
+        item.producto_id === producto_id
+          ? { ...item, cantidad: nuevaCantidad }
+          : item
+      ));
+    }
+  };
+
+  const eliminarDelCarrito = (producto_id: string) => {
+    setCarrito(carrito.filter(item => item.producto_id !== producto_id));
+  };
 
   const subtotal = carrito.reduce((sum, item) => sum + (item.precio * item.cantidad), 0);
+
+  const handleCobrar = async () => {
+    if (carrito.length === 0) return;
+    const success = await registrarVenta(carrito, 'efectivo');
+    if (success) {
+      setCarrito([]);
+    }
+  };
+
+  const handleFiar = async () => {
+    if (carrito.length === 0 || !clienteSeleccionado) return;
+    const success = await registrarVenta(carrito, 'fiado', clienteSeleccionado);
+    if (success) {
+      setCarrito([]);
+      setFiadoDialogOpen(false);
+      setClienteSeleccionado('');
+    }
+  };
 
   return (
     <Layout>
@@ -40,23 +109,19 @@ const POS = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input 
                   placeholder="Buscar producto o escanear código..." 
-                  className="pl-10 pr-12 h-12 text-lg"
+                  className="pl-10 h-12 text-lg"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2"
-                >
-                  <Mic className="h-5 w-5" />
-                </Button>
               </div>
 
               {/* Grid de productos */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {productos.map((producto) => (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-[600px] overflow-y-auto">
+                {productosFiltrados.map((producto) => (
                   <Card 
                     key={producto.id} 
                     className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => agregarAlCarrito(producto)}
                   >
                     <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
                       <span className="text-4xl">📦</span>
@@ -68,7 +133,10 @@ const POS = () => {
                       {producto.categoria}
                     </Badge>
                     <p className="text-lg font-bold text-primary">
-                      S/. {producto.precio.toFixed(2)}
+                      S/. {producto.precio_venta.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Stock: {producto.stock}
                     </p>
                   </Card>
                 ))}
@@ -80,14 +148,14 @@ const POS = () => {
           <Card className="lg:col-span-2 p-6 shadow-card lg:sticky lg:top-8 h-fit">
             <h2 className="text-xl font-semibold mb-4">Carrito</h2>
             
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3 mb-6 max-h-[400px] overflow-y-auto">
               {carrito.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <p>No hay productos en el carrito</p>
                 </div>
               ) : (
                 carrito.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+                  <div key={item.producto_id} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{item.nombre}</p>
                       <p className="text-sm text-muted-foreground">
@@ -95,19 +163,35 @@ const POS = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="icon" className="h-8 w-8">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => actualizarCantidad(item.producto_id, item.cantidad - 1)}
+                      >
                         <Minus className="h-4 w-4" />
                       </Button>
                       <Input 
                         type="number" 
                         value={item.cantidad}
+                        onChange={(e) => actualizarCantidad(item.producto_id, parseInt(e.target.value) || 0)}
                         className="w-16 h-8 text-center"
                       />
-                      <Button variant="outline" size="icon" className="h-8 w-8">
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-8 w-8"
+                        onClick={() => actualizarCantidad(item.producto_id, item.cantidad + 1)}
+                      >
                         <Plus className="h-4 w-4" />
                       </Button>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-destructive"
+                      onClick={() => eliminarDelCarrito(item.producto_id)}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -129,19 +213,65 @@ const POS = () => {
 
             {/* Acciones */}
             <div className="grid grid-cols-2 gap-3 mt-6">
-              <Button className="h-12">
+              <Button 
+                className="h-12" 
+                onClick={handleCobrar}
+                disabled={carrito.length === 0 || loading}
+              >
                 Cobrar
               </Button>
-              <Button variant="outline" className="h-12">
+              <Button 
+                variant="outline" 
+                className="h-12"
+                onClick={() => setFiadoDialogOpen(true)}
+                disabled={carrito.length === 0 || loading}
+              >
                 Fiar
               </Button>
             </div>
-            <Button variant="ghost" className="w-full mt-2">
+            <Button 
+              variant="ghost" 
+              className="w-full mt-2"
+              onClick={() => setCarrito([])}
+              disabled={carrito.length === 0}
+            >
               Cancelar
             </Button>
           </Card>
         </div>
       </div>
+
+      <Dialog open={fiadoDialogOpen} onOpenChange={setFiadoDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Seleccionar Cliente</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <Select value={clienteSeleccionado} onValueChange={setClienteSeleccionado}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecciona un cliente" />
+              </SelectTrigger>
+              <SelectContent>
+                {clientes.map(cliente => (
+                  <SelectItem key={cliente.id} value={cliente.id}>
+                    {cliente.nombre} - Deuda: S/. {cliente.deuda_total.toFixed(2)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setFiadoDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={handleFiar} disabled={!clienteSeleccionado || loading}>
+                Confirmar Fiado
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ChatbotWidget />
     </Layout>
   );
 };

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ChatbotWidget } from "@/components/ChatbotWidget";
 
 const Configuracion = () => {
   const categorias = ["Bebidas", "Panadería", "Lácteos", "Abarrotes", "Limpieza", "Snacks"];
@@ -95,6 +96,8 @@ const Configuracion = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ChatbotWidget />
     </Layout>
   );
 };

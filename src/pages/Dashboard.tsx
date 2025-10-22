@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { Layout } from "@/components/Layout";
 import { KPICard } from "@/components/KPICard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ChatbotWidget } from "@/components/ChatbotWidget";
 import { 
   DollarSign, 
   TrendingUp, 
@@ -12,8 +14,55 @@ import {
   ShoppingCart,
   Crown
 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+  const [kpis, setKpis] = useState({
+    ventaHoy: 0,
+    gananciaHoy: 0,
+    deudaTotal: 0,
+    alertas: 0
+  });
+
+  useEffect(() => {
+    const fetchKPIs = async () => {
+      // Obtener ventas del día
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      
+      const { data: ventas } = await supabase
+        .from('ventas')
+        .select('total')
+        .gte('created_at', hoy.toISOString());
+
+      const ventaHoy = ventas?.reduce((sum, v) => sum + parseFloat(v.total.toString()), 0) || 0;
+
+      // Obtener deuda total
+      const { data: clientes } = await supabase
+        .from('clientes')
+        .select('deuda_total');
+
+      const deudaTotal = clientes?.reduce((sum, c) => sum + parseFloat(c.deuda_total.toString()), 0) || 0;
+
+      // Obtener alertas (productos con stock bajo)
+      const { data: productos } = await supabase
+        .from('productos')
+        .select('*')
+        .or('estado.eq.Stock Bajo,estado.eq.Stock Crítico');
+
+      setKpis({
+        ventaHoy,
+        gananciaHoy: ventaHoy * 0.30, // Estimación 30% margen
+        deudaTotal,
+        alertas: productos?.length || 0
+      });
+    };
+
+    fetchKPIs();
+  }, []);
+
   const suggestions = [
     { text: "Aumentar stock de Inca Kola 1.5L - Se está agotando", priority: "Alta" },
     { text: "Recordar a Juan Pérez su deuda de S/. 45.00", priority: "Media" },
@@ -34,25 +83,24 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <KPICard
             title="Venta Hoy"
-            value="S/. 1,245.00"
+            value={`S/. ${kpis.ventaHoy.toFixed(2)}`}
             icon={<DollarSign className="h-6 w-6" />}
             trend={{ value: "+12.5%", isPositive: true }}
           />
           <KPICard
             title="Ganancia Hoy"
-            value="S/. 387.50"
+            value={`S/. ${kpis.gananciaHoy.toFixed(2)}`}
             icon={<TrendingUp className="h-6 w-6" />}
             trend={{ value: "+8.3%", isPositive: true }}
           />
           <KPICard
             title="Deuda Total"
-            value="S/. 2,340.00"
+            value={`S/. ${kpis.deudaTotal.toFixed(2)}`}
             icon={<CreditCard className="h-6 w-6" />}
-            trend={{ value: "-5.2%", isPositive: true }}
           />
           <KPICard
             title="Alertas"
-            value="8"
+            value={kpis.alertas}
             icon={<AlertCircle className="h-6 w-6" />}
           />
         </div>
@@ -140,21 +188,23 @@ const Dashboard = () => {
         <Card className="p-6 shadow-card">
           <h3 className="text-lg font-semibold mb-4">Acciones Rápidas</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Button className="h-auto py-4 flex-col gap-2">
+            <Button onClick={() => navigate('/pos')} className="h-auto py-4 flex-col gap-2">
               <ShoppingCart className="h-6 w-6" />
               <span>Nueva Venta</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button onClick={() => navigate('/inventario')} variant="outline" className="h-auto py-4 flex-col gap-2">
               <Package className="h-6 w-6" />
               <span>Agregar Producto</span>
             </Button>
-            <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+            <Button onClick={() => navigate('/fiados')} variant="outline" className="h-auto py-4 flex-col gap-2">
               <CreditCard className="h-6 w-6" />
               <span>Registrar Pago</span>
             </Button>
           </div>
         </Card>
       </div>
+
+      <ChatbotWidget />
     </Layout>
   );
 };
