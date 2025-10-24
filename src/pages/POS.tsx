@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
-import { Search, Plus, Minus, Trash2 } from "lucide-react";
+import { Search, Plus, Minus, Trash2, Mic, MicOff, Barcode } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import { useInventario } from "@/hooks/useInventario";
 import { useVentas, ItemVenta } from "@/hooks/useVentas";
 import { useFiados } from "@/hooks/useFiados";
@@ -27,10 +28,114 @@ const POS = () => {
   const { productos } = useInventario();
   const { registrarVenta, loading } = useVentas();
   const { clientes } = useFiados();
+  const { toast } = useToast();
   const [carrito, setCarrito] = useState<ItemVenta[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [fiadoDialogOpen, setFiadoDialogOpen] = useState(false);
   const [clienteSeleccionado, setClienteSeleccionado] = useState('');
+  const [escuchando, setEscuchando] = useState(false);
+  const [modoEscaneo, setModoEscaneo] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const scanBufferRef = useRef<string>('');
+
+  useEffect(() => {
+    // Inicializar reconocimiento de voz
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.lang = 'es-ES';
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('');
+
+        setSearchTerm(transcript);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Error de reconocimiento de voz:', event.error);
+        setEscuchando(false);
+        toast({
+          title: "Error",
+          description: "No se pudo activar el reconocimiento de voz",
+          variant: "destructive",
+        });
+      };
+
+      recognitionRef.current.onend = () => {
+        setEscuchando(false);
+      };
+    }
+
+    // Listener para escaneo de código de barras
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (!modoEscaneo) return;
+
+      if (e.key === 'Enter') {
+        if (scanBufferRef.current) {
+          buscarPorCodigo(scanBufferRef.current);
+          scanBufferRef.current = '';
+        }
+      } else {
+        scanBufferRef.current += e.key;
+        setTimeout(() => {
+          scanBufferRef.current = '';
+        }, 100);
+      }
+    };
+
+    window.addEventListener('keypress', handleKeyPress);
+    return () => {
+      window.removeEventListener('keypress', handleKeyPress);
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+      }
+    };
+  }, [modoEscaneo]);
+
+  const toggleVoz = () => {
+    if (!recognitionRef.current) {
+      toast({
+        title: "No disponible",
+        description: "Tu navegador no soporta reconocimiento de voz",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (escuchando) {
+      recognitionRef.current.stop();
+      setEscuchando(false);
+    } else {
+      recognitionRef.current.start();
+      setEscuchando(true);
+      toast({
+        title: "Escuchando...",
+        description: "Di el nombre del producto que buscas",
+      });
+    }
+  };
+
+  const buscarPorCodigo = (codigo: string) => {
+    const producto = productos.find(p => p.codigo.toLowerCase() === codigo.toLowerCase());
+    if (producto) {
+      agregarAlCarrito(producto);
+      toast({
+        title: "Producto agregado",
+        description: `${producto.nombre} añadido al carrito`,
+      });
+    } else {
+      toast({
+        title: "Producto no encontrado",
+        description: `No se encontró producto con código: ${codigo}`,
+        variant: "destructive",
+      });
+    }
+  };
 
   const productosFiltrados = productos.filter(p =>
     p.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,15 +209,51 @@ const POS = () => {
           {/* Catálogo - 3 columnas */}
           <Card className="lg:col-span-3 p-6 shadow-card">
             <div className="space-y-4">
-              {/* Buscador */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <Input 
-                  placeholder="Buscar producto o escanear código..." 
-                  className="pl-10 h-12 text-lg"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
+              {/* Buscador con voz y escáner */}
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    <Input 
+                      placeholder="Buscar producto o escanear código..." 
+                      className="pl-10 h-12 text-lg"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <Button
+                    variant={escuchando ? "default" : "outline"}
+                    size="icon"
+                    className="h-12 w-12"
+                    onClick={toggleVoz}
+                  >
+                    {escuchando ? <MicOff className="h-5 w-5" /> : <Mic className="h-5 w-5" />}
+                  </Button>
+                  <Button
+                    variant={modoEscaneo ? "default" : "outline"}
+                    size="icon"
+                    className="h-12 w-12"
+                    onClick={() => {
+                      setModoEscaneo(!modoEscaneo);
+                      toast({
+                        title: modoEscaneo ? "Modo escáner desactivado" : "Modo escáner activado",
+                        description: modoEscaneo ? "Usa el teclado normalmente" : "Escanea productos con el lector",
+                      });
+                    }}
+                  >
+                    <Barcode className="h-5 w-5" />
+                  </Button>
+                </div>
+                {escuchando && (
+                  <p className="text-sm text-muted-foreground animate-pulse">
+                    🎤 Escuchando...
+                  </p>
+                )}
+                {modoEscaneo && (
+                  <p className="text-sm text-muted-foreground">
+                    📷 Modo escáner activo - Escanea un código de barras
+                  </p>
+                )}
               </div>
 
               {/* Grid de productos */}
@@ -123,8 +264,16 @@ const POS = () => {
                     className="p-4 hover:shadow-md transition-shadow cursor-pointer"
                     onClick={() => agregarAlCarrito(producto)}
                   >
-                    <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center">
-                      <span className="text-4xl">📦</span>
+                    <div className="aspect-square bg-muted rounded-lg mb-3 flex items-center justify-center overflow-hidden">
+                      {(producto as any).imagen_url ? (
+                        <img 
+                          src={(producto as any).imagen_url} 
+                          alt={producto.nombre}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-4xl">📦</span>
+                      )}
                     </div>
                     <h3 className="font-semibold text-sm mb-1 line-clamp-2">
                       {producto.nombre}

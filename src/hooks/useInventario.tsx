@@ -11,6 +11,7 @@ export interface Producto {
   precio_venta: number;
   categoria: string;
   estado: string;
+  imagen_url?: string | null;
 }
 
 export const useInventario = () => {
