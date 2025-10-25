@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
 import { ProductoModal } from "@/components/modals/ProductoModal";
 import { CargaMasivaModal } from "@/components/modals/CargaMasivaModal";
-import { Plus, Search, Pencil, Trash2, Upload, ChevronLeft, ChevronRight } from "lucide-react";
+import { HistorialPreciosModal } from "@/components/modals/HistorialPreciosModal";
+import { Plus, Search, Pencil, Trash2, Upload, ChevronLeft, ChevronRight, History } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
@@ -41,6 +42,8 @@ const Inventario = () => {
   const [filtroCategoria, setFiltroCategoria] = useState<string>("todas");
   const [filtroEstado, setFiltroEstado] = useState<string>("todos");
   const [ordenamiento, setOrdenamiento] = useState<string>("nombre-asc");
+  const [historialModalOpen, setHistorialModalOpen] = useState(false);
+  const [productoHistorial, setProductoHistorial] = useState<{id: string; nombre: string} | null>(null);
   const itemsPorPagina = 10;
 
   const categorias = useMemo(() => {

@@ -16,52 +16,126 @@ export type Database = {
     Tables: {
       clientes: {
         Row: {
+          activo: boolean | null
           celular: string | null
           created_at: string | null
           deuda_total: number
+          direccion: string | null
+          dni: string | null
+          email: string | null
+          foto_url: string | null
           id: string
           nombre: string
+          notas: string | null
           updated_at: string | null
         }
         Insert: {
+          activo?: boolean | null
           celular?: string | null
           created_at?: string | null
           deuda_total?: number
+          direccion?: string | null
+          dni?: string | null
+          email?: string | null
+          foto_url?: string | null
           id?: string
           nombre: string
+          notas?: string | null
           updated_at?: string | null
         }
         Update: {
+          activo?: boolean | null
           celular?: string | null
           created_at?: string | null
           deuda_total?: number
+          direccion?: string | null
+          dni?: string | null
+          email?: string | null
+          foto_url?: string | null
           id?: string
           nombre?: string
+          notas?: string | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      historial_precios: {
+        Row: {
+          created_at: string | null
+          id: string
+          motivo: string | null
+          precio_costo_anterior: number
+          precio_costo_nuevo: number
+          precio_venta_anterior: number
+          precio_venta_nuevo: number
+          producto_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          motivo?: string | null
+          precio_costo_anterior: number
+          precio_costo_nuevo: number
+          precio_venta_anterior: number
+          precio_venta_nuevo: number
+          producto_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          motivo?: string | null
+          precio_costo_anterior?: number
+          precio_costo_nuevo?: number
+          precio_venta_anterior?: number
+          precio_venta_nuevo?: number
+          producto_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historial_precios_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "productos"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       operadores: {
         Row: {
           activo: boolean
           celular: string
           created_at: string | null
+          direccion: string | null
+          dni: string | null
+          email: string | null
+          fecha_ingreso: string | null
           id: string
           nombre: string
+          salario: number | null
         }
         Insert: {
           activo?: boolean
           celular: string
           created_at?: string | null
+          direccion?: string | null
+          dni?: string | null
+          email?: string | null
+          fecha_ingreso?: string | null
           id?: string
           nombre: string
+          salario?: number | null
         }
         Update: {
           activo?: boolean
           celular?: string
           created_at?: string | null
+          direccion?: string | null
+          dni?: string | null
+          email?: string | null
+          fecha_ingreso?: string | null
           id?: string
           nombre?: string
+          salario?: number | null
         }
         Relationships: []
       }
@@ -107,32 +181,71 @@ export type Database = {
         }
         Relationships: []
       }
+      reportes_sunat: {
+        Row: {
+          created_at: string | null
+          id: string
+          periodo: string
+          total_compras: number | null
+          total_fiados: number | null
+          total_pagos: number | null
+          total_ventas: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          periodo: string
+          total_compras?: number | null
+          total_fiados?: number | null
+          total_pagos?: number | null
+          total_ventas?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          periodo?: string
+          total_compras?: number | null
+          total_fiados?: number | null
+          total_pagos?: number | null
+          total_ventas?: number | null
+        }
+        Relationships: []
+      }
       transacciones_fiados: {
         Row: {
           cliente_id: string | null
+          comprobante_url: string | null
           created_at: string | null
           descripcion: string | null
           estado: string
           id: string
+          metodo_pago: string | null
           monto: number
+          referencia_transaccion: string | null
           tipo: string
         }
         Insert: {
           cliente_id?: string | null
+          comprobante_url?: string | null
           created_at?: string | null
           descripcion?: string | null
           estado?: string
           id?: string
+          metodo_pago?: string | null
           monto: number
+          referencia_transaccion?: string | null
           tipo: string
         }
         Update: {
           cliente_id?: string | null
+          comprobante_url?: string | null
           created_at?: string | null
           descripcion?: string | null
           estado?: string
           id?: string
+          metodo_pago?: string | null
           monto?: number
+          referencia_transaccion?: string | null
           tipo?: string
         }
         Relationships: [

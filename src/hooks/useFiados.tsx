@@ -7,6 +7,13 @@ export interface Cliente {
   nombre: string;
   celular: string | null;
   deuda_total: number;
+  foto_url?: string | null;
+  dni?: string | null;
+  email?: string | null;
+  direccion?: string | null;
+  notas?: string | null;
+  activo?: boolean;
+  created_at?: string;
 }
 
 export interface Transaccion {
@@ -69,7 +76,40 @@ export const useFiados = () => {
     }
   };
 
-  const registrarPago = async (clienteId: string, monto: number, descripcion?: string) => {
+  const registrarCliente = async (clienteData: any) => {
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .insert([clienteData]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Cliente registrado",
+        description: "El cliente se ha registrado correctamente",
+      });
+
+      fetchClientes();
+      return true;
+    } catch (error) {
+      console.error('Error registrando cliente:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo registrar el cliente",
+        variant: "destructive",
+      });
+      return false;
+    }
+  };
+
+  const registrarPago = async (
+    clienteId: string, 
+    monto: number, 
+    descripcion?: string,
+    metodoPago: string = 'efectivo',
+    referencia?: string,
+    comprobanteUrl?: string
+  ) => {
     try {
       const { error: transError } = await supabase
         .from('transacciones_fiados')
@@ -78,7 +118,10 @@ export const useFiados = () => {
           tipo: 'pago',
           monto,
           descripcion: descripcion || `Pago de S/. ${monto.toFixed(2)}`,
-          estado: 'completado'
+          estado: 'completado',
+          metodo_pago: metodoPago,
+          referencia_transaccion: referencia,
+          comprobante_url: comprobanteUrl
         }]);
 
       if (transError) throw transError;
@@ -138,6 +181,7 @@ export const useFiados = () => {
     clientes,
     loading,
     agregarCliente,
+    registrarCliente,
     registrarPago,
     refetch: fetchClientes,
   };

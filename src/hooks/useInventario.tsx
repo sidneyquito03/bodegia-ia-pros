@@ -64,14 +64,32 @@ export const useInventario = () => {
     }
   };
 
-  const actualizarProducto = async (id: string, updates: Partial<Producto>) => {
+  const actualizarProducto = async (id: string, updates: Partial<Producto>, motivo?: string) => {
     try {
+      // Obtener el producto anterior
+      const productoAnterior = productos.find(p => p.id === id);
+      
       const { error } = await supabase
         .from('productos')
         .update(updates)
         .eq('id', id);
 
       if (error) throw error;
+
+      // Si cambió el precio, registrar en historial
+      if (productoAnterior && (
+        (updates.precio_costo && updates.precio_costo !== productoAnterior.precio_costo) ||
+        (updates.precio_venta && updates.precio_venta !== productoAnterior.precio_venta)
+      )) {
+        await supabase.from('historial_precios').insert([{
+          producto_id: id,
+          precio_costo_anterior: productoAnterior.precio_costo,
+          precio_venta_anterior: productoAnterior.precio_venta,
+          precio_costo_nuevo: updates.precio_costo || productoAnterior.precio_costo,
+          precio_venta_nuevo: updates.precio_venta || productoAnterior.precio_venta,
+          motivo: motivo || 'Actualización de precio'
+        }]);
+      }
 
       toast({
         title: "Producto actualizado",
