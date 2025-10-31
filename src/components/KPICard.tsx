@@ -11,9 +11,10 @@ interface KPICardProps {
     isPositive: boolean;
   };
   className?: string;
+  comparisonText?: string;
 }
 
-export const KPICard = ({ title, value, icon, trend, className }: KPICardProps) => {
+export const KPICard = ({ title, value, icon, trend, className, comparisonText }: KPICardProps) => {
   return (
     <Card className={cn("p-6 shadow-card", className)}>
       <div className="flex items-start justify-between">
@@ -26,6 +27,11 @@ export const KPICard = ({ title, value, icon, trend, className }: KPICardProps) 
               trend.isPositive ? "text-success" : "text-destructive"
             )}>
               {trend.isPositive ? "↑" : "↓"} {trend.value}
+              {comparisonText && (
+      <span className="text-xs text-muted-foreground font-normal ml-1">
+        {comparisonText} 
+      </span>
+    )}
             </p>
           )}
         </div>
