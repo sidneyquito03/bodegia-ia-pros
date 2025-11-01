@@ -6,12 +6,16 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
 import { OperadorModal } from "@/components/modals/OperadorModal";
+import { EditarOperadorModal } from "@/components/modals/EditarOperadorModal";
 import { Plus, Pencil, ToggleLeft, ToggleRight } from "lucide-react";
 import { useOperadores } from "@/hooks/useOperadores";
+import { Operador } from "@/hooks/useOperadores";
 
 const Equipo = () => {
-  const { operadores, loading, agregarOperador, toggleOperador } = useOperadores();
+  const { operadores, loading, agregarOperador, actualizarOperador, toggleOperador } = useOperadores();
   const [modalOpen, setModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [operadorSeleccionado, setOperadorSeleccionado] = useState<Operador | null>(null);
 
   const getIniciales = (nombre: string) => {
     const parts = nombre.split(' ');
@@ -69,6 +73,18 @@ const Equipo = () => {
                     variant="outline" 
                     size="sm" 
                     className="flex-1 gap-2"
+                    onClick={() => {
+                      setOperadorSeleccionado(operador);
+                      setEditModalOpen(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Editar
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2"
                     onClick={() => toggleOperador(operador.id, operador.activo)}
                   >
                     {operador.activo ? (
@@ -94,6 +110,16 @@ const Equipo = () => {
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
         onSave={agregarOperador}
+      />
+
+      <EditarOperadorModal
+        isOpen={editModalOpen}
+        onClose={() => {
+          setEditModalOpen(false);
+          setOperadorSeleccionado(null);
+        }}
+        onSave={actualizarOperador}
+        operador={operadorSeleccionado}
       />
 
       <ChatbotWidget />

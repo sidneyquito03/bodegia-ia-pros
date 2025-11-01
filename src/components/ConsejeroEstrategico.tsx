@@ -32,7 +32,7 @@ export const ConsejeroEstrategico = () => {
         supabase.from('ventas').select('*').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
         supabase.from('clientes').select('*'),
         supabase.from('productos').select('*'),
-        supabase.from('transacciones_fiados').select('*').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+        supabase.from('transacciones_fiados').select('*, clientes(nombre)').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       ]);
 
       const ventas = ventasRes.data || [];
@@ -40,36 +40,43 @@ export const ConsejeroEstrategico = () => {
       const productos = productosRes.data || [];
       const transacciones = transaccionesRes.data || [];
 
+      // Analizar métodos de pago
+      const metodosPago = transacciones.reduce((acc, t) => {
+        acc[t.metodo_pago] = (acc[t.metodo_pago] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
       // Llamar a la IA para generar recomendaciones
       const { data, error } = await supabase.functions.invoke('chat-assistant', {
         body: {
-          message: `Analiza estos datos y genera 5 recomendaciones estratégicas con prioridad (Alta/Media/Baja):
+          messages: [{
+            role: 'user',
+            content: `Analiza estos datos de una bodega en Perú y genera 5 recomendaciones estratégicas:
           
-Ventas última semana: ${ventas.length}
-Total vendido: S/. ${ventas.reduce((sum, v) => sum + Number(v.total), 0).toFixed(2)}
-Clientes con deuda: ${clientes.filter(c => c.deuda_total > 0).length}
-Deuda total: S/. ${clientes.reduce((sum, c) => sum + Number(c.deuda_total), 0).toFixed(2)}
-Productos bajo stock: ${productos.filter(p => p.stock < 10).length}
-Transacciones fiados: ${transacciones.length}
-Métodos de pago: ${JSON.stringify(transacciones.reduce((acc, t) => {
-  acc[t.metodo_pago] = (acc[t.metodo_pago] || 0) + 1;
-  return acc;
-}, {} as Record<string, number>))}
+📊 DATOS DE LA ÚLTIMA SEMANA:
+- Ventas realizadas: ${ventas.length}
+- Total vendido: S/. ${ventas.reduce((sum, v) => sum + Number(v.total), 0).toFixed(2)}
+- Clientes con deuda activa: ${clientes.filter(c => c.deuda_total > 0).length}
+- Deuda total pendiente: S/. ${clientes.reduce((sum, c) => sum + Number(c.deuda_total), 0).toFixed(2)}
+- Productos con stock bajo (<10): ${productos.filter(p => p.stock < 10).length}
+- Transacciones de fiados: ${transacciones.length}
+- Métodos de pago usados: ${JSON.stringify(metodosPago)}
 
-Responde SOLO con un JSON array en este formato exacto:
+IMPORTANTE: Responde SOLO con un JSON array válido, sin texto adicional:
 [{
-  "titulo": "Título corto",
-  "descripcion": "Descripción detallada",
+  "titulo": "Título corto y claro",
+  "descripcion": "Descripción específica y accionable de 2-3 líneas",
   "prioridad": "Alta|Media|Baja",
   "categoria": "Ventas|Inventario|Fiados|Operaciones"
 }]`
+          }]
         }
       });
 
       if (error) throw error;
 
       try {
-        const respuestaIA = data.response;
+        const respuestaIA = data.message;
         const jsonMatch = respuestaIA.match(/\[[\s\S]*\]/);
         if (jsonMatch) {
           const recsGeneradas = JSON.parse(jsonMatch[0]);
@@ -78,10 +85,10 @@ Responde SOLO con un JSON array en este formato exacto:
             id: `rec-${i}`
           })));
         } else {
-          throw new Error('No se pudo extraer JSON');
+          throw new Error('No se pudo extraer JSON de la respuesta');
         }
       } catch (parseError) {
-        console.error('Error parseando respuesta IA:', parseError);
+        console.error('Error parseando respuesta IA:', parseError, data);
         // Fallback a recomendaciones estáticas
         generarRecomendacionesBasicas(ventas, clientes, productos, transacciones);
       }

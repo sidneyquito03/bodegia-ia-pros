@@ -84,6 +84,31 @@ export const useOperadores = () => {
     }
   };
 
+  const actualizarOperador = async (id: string, data: Partial<Operador>) => {
+    try {
+      const { error } = await supabase
+        .from('operadores')
+        .update(data)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Operador actualizado",
+        description: "Los cambios se han guardado correctamente",
+      });
+
+      fetchOperadores();
+    } catch (error: any) {
+      console.error('Error actualizando operador:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el operador",
+        variant: "destructive",
+      });
+    }
+  };
+
   const eliminarOperador = async (id: string) => {
     try {
       const { error } = await supabase
@@ -136,6 +161,7 @@ export const useOperadores = () => {
     operadores,
     loading,
     agregarOperador,
+    actualizarOperador,
     toggleOperador,
     eliminarOperador,
     refetch: fetchOperadores,

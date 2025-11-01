@@ -154,6 +154,81 @@ export const useFiados = () => {
     }
   };
 
+  const editarTransaccion = async (id: string, monto: number, descripcion: string, metodoPago: string) => {
+    try {
+      const { error } = await supabase
+        .from('transacciones_fiados')
+        .update({ monto, descripcion, metodo_pago: metodoPago })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Transacción actualizada",
+        description: "Los cambios se guardaron correctamente",
+      });
+
+      fetchClientes();
+    } catch (error: any) {
+      console.error('Error editando transacción:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo editar la transacción",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const eliminarTransaccion = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('transacciones_fiados')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Transacción eliminada",
+        description: "La transacción se eliminó correctamente",
+      });
+
+      fetchClientes();
+    } catch (error: any) {
+      console.error('Error eliminando transacción:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar la transacción",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const editarCliente = async (id: string, data: Partial<Cliente>) => {
+    try {
+      const { error } = await supabase
+        .from('clientes')
+        .update(data)
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Cliente actualizado",
+        description: "Los cambios se guardaron correctamente",
+      });
+
+      fetchClientes();
+    } catch (error: any) {
+      console.error('Error editando cliente:', error);
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo editar el cliente",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchClientes();
 
@@ -183,6 +258,9 @@ export const useFiados = () => {
     agregarCliente,
     registrarCliente,
     registrarPago,
+    editarTransaccion,
+    eliminarTransaccion,
+    editarCliente,
     refetch: fetchClientes,
   };
 };

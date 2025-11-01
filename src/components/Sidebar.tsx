@@ -8,7 +8,8 @@ import {
   Users, 
   Settings,
   Menu,
-  X
+  X,
+  FileText
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -19,6 +20,7 @@ const navItems = [
   { to: "/fiados", icon: Receipt, label: "Fiados" },
   { to: "/pos", icon: ShoppingCart, label: "Punto de Venta" },
   { to: "/reportes", icon: TrendingUp, label: "Reportes" },
+  { to: "/reportes-sunat", icon: FileText, label: "Reportes SUNAT" },
   { to: "/equipo", icon: Users, label: "Equipo" },
   { to: "/configuracion", icon: Settings, label: "Configuración" },
 ];

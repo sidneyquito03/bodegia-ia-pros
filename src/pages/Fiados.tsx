@@ -8,13 +8,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChatbotWidget } from "@/components/ChatbotWidget";
 import { PagoModal } from "@/components/modals/PagoModal";
 import { ClienteModal } from "@/components/modals/ClienteModal";
-import { CreditCard, Users, TrendingDown, UserPlus, Search, Calendar } from "lucide-react";
+import { CreditCard, Users, TrendingDown, UserPlus, Search, Calendar, History } from "lucide-react";
 import { useFiados } from "@/hooks/useFiados";
 import { Badge } from "@/components/ui/badge";
 import { differenceInDays, format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
 
 const Fiados = () => {
+  const navigate = useNavigate();
   const { clientes, loading, registrarPago, registrarCliente } = useFiados();
   const [pagoModalOpen, setPagoModalOpen] = useState(false);
   const [clienteModalOpen, setClienteModalOpen] = useState(false);
@@ -67,10 +69,16 @@ const Fiados = () => {
             <h1 className="text-3xl font-bold">Gestión de Fiados</h1>
             <p className="text-muted-foreground mt-1">Control de créditos a clientes</p>
           </div>
-          <Button onClick={() => setClienteModalOpen(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Registrar Cliente
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/historial-fiados')}>
+              <History className="mr-2 h-4 w-4" />
+              Ver Historial
+            </Button>
+            <Button onClick={() => setClienteModalOpen(true)}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              Registrar Cliente
+            </Button>
+          </div>
         </div>
 
         {/* KPIs */}

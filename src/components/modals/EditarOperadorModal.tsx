@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Operador } from "@/hooks/useOperadores";
 
-interface OperadorModalProps {
+interface EditarOperadorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (operador: Omit<Operador, 'id' | 'activo'>) => void;
+  onSave: (id: string, data: Partial<Operador>) => void;
+  operador: Operador | null;
 }
 
-export const OperadorModal = ({ isOpen, onClose, onSave }: OperadorModalProps) => {
+export const EditarOperadorModal = ({ isOpen, onClose, onSave, operador }: EditarOperadorModalProps) => {
   const [formData, setFormData] = useState({
     nombre: '',
     celular: '',
@@ -21,26 +22,36 @@ export const OperadorModal = ({ isOpen, onClose, onSave }: OperadorModalProps) =
   });
 
   useEffect(() => {
-    if (!isOpen) {
+    if (operador) {
+      setFormData({
+        nombre: operador.nombre || '',
+        celular: operador.celular || '',
+        email: (operador as any).email || '',
+        dni: (operador as any).dni || '',
+        direccion: (operador as any).direccion || '',
+      });
+    } else {
       setFormData({ nombre: '', celular: '', email: '', dni: '', direccion: '' });
     }
-  }, [isOpen]);
+  }, [operador, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
-    onClose();
+    if (operador) {
+      onSave(operador.id, formData);
+      onClose();
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px]">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Crear Operador</DialogTitle>
+          <DialogTitle>Editar Operador</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="nombre">Nombre Completo</Label>
+            <Label htmlFor="nombre">Nombre Completo *</Label>
             <Input
               id="nombre"
               value={formData.nombre}
@@ -79,7 +90,7 @@ export const OperadorModal = ({ isOpen, onClose, onSave }: OperadorModalProps) =
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="Ej: operador@ejemplo.com"
+              placeholder="Ej: juan@ejemplo.com"
             />
           </div>
 
@@ -98,7 +109,7 @@ export const OperadorModal = ({ isOpen, onClose, onSave }: OperadorModalProps) =
               Cancelar
             </Button>
             <Button type="submit">
-              Crear Operador
+              Guardar Cambios
             </Button>
           </DialogFooter>
         </form>
