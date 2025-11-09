@@ -59,6 +59,66 @@ export type Database = {
         }
         Relationships: []
       }
+      compras_proveedores: {
+        Row: {
+          cantidad: number
+          created_at: string | null
+          estado: string | null
+          fecha_entrega_estimada: string | null
+          fecha_entrega_real: string | null
+          fecha_pedido: string | null
+          id: string
+          notas: string | null
+          precio_unitario: number
+          producto_id: string | null
+          proveedor_id: string | null
+          total: number
+        }
+        Insert: {
+          cantidad: number
+          created_at?: string | null
+          estado?: string | null
+          fecha_entrega_estimada?: string | null
+          fecha_entrega_real?: string | null
+          fecha_pedido?: string | null
+          id?: string
+          notas?: string | null
+          precio_unitario: number
+          producto_id?: string | null
+          proveedor_id?: string | null
+          total: number
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string | null
+          estado?: string | null
+          fecha_entrega_estimada?: string | null
+          fecha_entrega_real?: string | null
+          fecha_pedido?: string | null
+          id?: string
+          notas?: string | null
+          precio_unitario?: number
+          producto_id?: string | null
+          proveedor_id?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compras_proveedores_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "productos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compras_proveedores_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historial_precios: {
         Row: {
           created_at: string | null
@@ -145,12 +205,18 @@ export type Database = {
           codigo: string
           created_at: string | null
           estado: string
+          fecha_vencimiento: string | null
           id: string
           imagen_url: string | null
+          marca: string | null
+          medida_peso: string | null
           nombre: string
           precio_costo: number
           precio_venta: number
+          proveedor_id: string | null
           stock: number
+          stock_bajo: number | null
+          stock_critico: number | null
           updated_at: string | null
         }
         Insert: {
@@ -158,12 +224,18 @@ export type Database = {
           codigo: string
           created_at?: string | null
           estado?: string
+          fecha_vencimiento?: string | null
           id?: string
           imagen_url?: string | null
+          marca?: string | null
+          medida_peso?: string | null
           nombre: string
           precio_costo: number
           precio_venta: number
+          proveedor_id?: string | null
           stock?: number
+          stock_bajo?: number | null
+          stock_critico?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -171,12 +243,71 @@ export type Database = {
           codigo?: string
           created_at?: string | null
           estado?: string
+          fecha_vencimiento?: string | null
           id?: string
           imagen_url?: string | null
+          marca?: string | null
+          medida_peso?: string | null
           nombre?: string
           precio_costo?: number
           precio_venta?: number
+          proveedor_id?: string | null
           stock?: number
+          stock_bajo?: number | null
+          stock_critico?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "productos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proveedores: {
+        Row: {
+          activo: boolean | null
+          contacto: string | null
+          created_at: string | null
+          direccion: string | null
+          email: string | null
+          id: string
+          nombre: string
+          notas: string | null
+          ruc: string | null
+          telefono: string | null
+          tiempo_entrega_dias: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          activo?: boolean | null
+          contacto?: string | null
+          created_at?: string | null
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          nombre: string
+          notas?: string | null
+          ruc?: string | null
+          telefono?: string | null
+          tiempo_entrega_dias?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          activo?: boolean | null
+          contacto?: string | null
+          created_at?: string | null
+          direccion?: string | null
+          email?: string | null
+          id?: string
+          nombre?: string
+          notas?: string | null
+          ruc?: string | null
+          telefono?: string | null
+          tiempo_entrega_dias?: number | null
           updated_at?: string | null
         }
         Relationships: []

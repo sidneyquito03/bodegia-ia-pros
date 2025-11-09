@@ -12,6 +12,12 @@ export interface Producto {
   categoria: string;
   estado: string;
   imagen_url?: string | null;
+  proveedor_id?: string | null;
+  fecha_vencimiento?: string | null;
+  marca?: string | null;
+  medida_peso?: string | null;
+  stock_critico?: number;
+  stock_bajo?: number;
 }
 
 export const useInventario = () => {
@@ -23,7 +29,7 @@ export const useInventario = () => {
     try {
       const { data, error } = await supabase
         .from('productos')
-        .select('*')
+        .select('*, proveedores(nombre)')
         .order('nombre');
 
       if (error) throw error;

@@ -8,6 +8,7 @@ import { Producto } from "@/hooks/useInventario";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, X } from "lucide-react";
+import { useProveedores } from "@/hooks/useProveedores";
 
 interface ProductoModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ interface ProductoModalProps {
 
 export const ProductoModal = ({ isOpen, onClose, onSave, producto }: ProductoModalProps) => {
   const { toast } = useToast();
+  const { proveedores } = useProveedores();
   const [categorias, setCategorias] = useState<string[]>([]);
   const [nuevaCategoria, setNuevaCategoria] = useState("");
   const [mostrarNuevaCategoria, setMostrarNuevaCategoria] = useState(false);
@@ -32,6 +34,12 @@ export const ProductoModal = ({ isOpen, onClose, onSave, producto }: ProductoMod
     categoria: '',
     estado: 'Disponible',
     imagen_url: null as string | null,
+    proveedor_id: null as string | null,
+    fecha_vencimiento: null as string | null,
+    marca: null as string | null,
+    medida_peso: null as string | null,
+    stock_critico: 10,
+    stock_bajo: 20,
   });
 
   useEffect(() => {
@@ -49,6 +57,12 @@ export const ProductoModal = ({ isOpen, onClose, onSave, producto }: ProductoMod
         categoria: producto.categoria,
         estado: producto.estado,
         imagen_url: (producto as any).imagen_url || null,
+        proveedor_id: producto.proveedor_id || null,
+        fecha_vencimiento: producto.fecha_vencimiento || null,
+        marca: producto.marca || null,
+        medida_peso: producto.medida_peso || null,
+        stock_critico: producto.stock_critico || 10,
+        stock_bajo: producto.stock_bajo || 20,
       });
       setImagenPreview((producto as any).imagen_url || null);
     } else {
@@ -61,6 +75,12 @@ export const ProductoModal = ({ isOpen, onClose, onSave, producto }: ProductoMod
         categoria: '',
         estado: 'Disponible',
         imagen_url: null,
+        proveedor_id: null,
+        fecha_vencimiento: null,
+        marca: null,
+        medida_peso: null,
+        stock_critico: 10,
+        stock_bajo: 20,
       });
       setImagenPreview(null);
     }
@@ -281,6 +301,96 @@ export const ProductoModal = ({ isOpen, onClose, onSave, producto }: ProductoMod
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
+              <Label htmlFor="marca">Marca</Label>
+              <Input
+                id="marca"
+                value={formData.marca || ''}
+                onChange={(e) => setFormData({ ...formData, marca: e.target.value || null })}
+                placeholder="Ej: Gloria, Coca-Cola, etc."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="medida_peso">Medida/Peso</Label>
+              <Input
+                id="medida_peso"
+                value={formData.medida_peso || ''}
+                onChange={(e) => setFormData({ ...formData, medida_peso: e.target.value || null })}
+                placeholder="Ej: 500g, 1L, 12 unid"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="proveedor">Proveedor</Label>
+              <Select 
+                value={formData.proveedor_id || ''} 
+                onValueChange={(value) => setFormData({ ...formData, proveedor_id: value || null })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar proveedor" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sin proveedor</SelectItem>
+                  {proveedores.filter(p => p.activo).map((prov) => (
+                    <SelectItem key={prov.id} value={prov.id}>
+                      {prov.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="fecha_vencimiento">Fecha de Vencimiento</Label>
+              <Input
+                id="fecha_vencimiento"
+                type="date"
+                value={formData.fecha_vencimiento || ''}
+                onChange={(e) => setFormData({ ...formData, fecha_vencimiento: e.target.value || null })}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="stock_critico">Stock Crítico</Label>
+              <Input
+                id="stock_critico"
+                type="number"
+                min="0"
+                value={formData.stock_critico}
+                onChange={(e) => setFormData({ ...formData, stock_critico: parseInt(e.target.value) || 10 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="stock_bajo">Stock Bajo</Label>
+              <Input
+                id="stock_bajo"
+                type="number"
+                min="0"
+                value={formData.stock_bajo}
+                onChange={(e) => setFormData({ ...formData, stock_bajo: parseInt(e.target.value) || 20 })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="estado">Estado</Label>
+              <Select value={formData.estado} onValueChange={(value) => setFormData({ ...formData, estado: value })}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Disponible">Disponible</SelectItem>
+                  <SelectItem value="Stock Bajo">Stock Bajo</SelectItem>
+                  <SelectItem value="Stock Crítico">Stock Crítico</SelectItem>
+                  <SelectItem value="Agotado">Agotado</SelectItem>
+                  <SelectItem value="Vencido">Vencido</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="categoria">Categoría *</Label>
               {!mostrarNuevaCategoria ? (
                 <div className="flex gap-2">
@@ -341,20 +451,6 @@ export const ProductoModal = ({ isOpen, onClose, onSave, producto }: ProductoMod
                   </Button>
                 </div>
               )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="estado">Estado</Label>
-              <Select value={formData.estado} onValueChange={(value) => setFormData({ ...formData, estado: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Disponible">Disponible</SelectItem>
-                  <SelectItem value="Stock Bajo">Stock Bajo</SelectItem>
-                  <SelectItem value="Stock Crítico">Stock Crítico</SelectItem>
-                  <SelectItem value="Agotado">Agotado</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 

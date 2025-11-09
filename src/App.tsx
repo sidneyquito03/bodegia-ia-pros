@@ -12,6 +12,7 @@ import POS from "./pages/POS";
 import Reportes from "./pages/Reportes";
 import ReportesSUNAT from "./pages/ReportesSUNAT";
 import Equipo from "./pages/Equipo";
+import Proveedores from "./pages/Proveedores";
 import Configuracion from "./pages/Configuracion";
 import NotFound from "./pages/NotFound";
 
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/reportes" element={<Reportes />} />
           <Route path="/reportes-sunat" element={<ReportesSUNAT />} />
           <Route path="/equipo" element={<Equipo />} />
+          <Route path="/proveedores" element={<Proveedores />} />
           <Route path="/configuracion" element={<Configuracion />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
