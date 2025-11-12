@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Package, 
@@ -10,10 +10,14 @@ import {
   Menu,
   X,
   FileText,
-  Store
+  Store,
+  LogOut
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
@@ -28,6 +32,26 @@ const navItems = [
 
 export const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { signOut, user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast({
+        title: "Sesión cerrada",
+        description: "Has cerrado sesión correctamente"
+      });
+      navigate('/auth');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo cerrar sesión",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <>
@@ -78,7 +102,21 @@ export const Sidebar = () => {
           </nav>
 
           {/* Footer */}
-          <div className="p-4 border-t border-border">
+          <div className="p-4 border-t border-border space-y-3">
+            {user && (
+              <div className="px-3 py-2 bg-muted rounded-lg">
+                <p className="text-xs text-muted-foreground">Sesión activa</p>
+                <p className="text-sm font-medium truncate">{user.email}</p>
+              </div>
+            )}
+            <Button
+              onClick={handleSignOut}
+              variant="outline"
+              className="w-full justify-start gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Cerrar Sesión
+            </Button>
             <p className="text-xs text-muted-foreground text-center">
               © 2025 Bodegia
             </p>
