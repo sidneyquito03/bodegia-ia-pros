@@ -6,6 +6,7 @@ export interface Operador {
   id: string;
   nombre: string;
   celular: string;
+  email?: string;
   activo: boolean;
 }
 

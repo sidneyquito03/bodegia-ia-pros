@@ -16,13 +16,14 @@ export const OperadorModal = ({ isOpen, onClose, onSave }: OperadorModalProps) =
     nombre: '',
     celular: '',
     email: '',
+    password: '',
     dni: '',
     direccion: '',
   });
 
   useEffect(() => {
     if (!isOpen) {
-      setFormData({ nombre: '', celular: '', email: '', dni: '', direccion: '' });
+      setFormData({ nombre: '', celular: '', email: '', password: '', dni: '', direccion: '' });
     }
   }, [isOpen]);
 
@@ -36,7 +37,7 @@ export const OperadorModal = ({ isOpen, onClose, onSave }: OperadorModalProps) =
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
-          <DialogTitle>Crear Operador</DialogTitle>
+          <DialogTitle>Crear Vendedor</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -73,14 +74,34 @@ export const OperadorModal = ({ isOpen, onClose, onSave }: OperadorModalProps) =
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">Email (Credencial de Acceso) *</Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="Ej: operador@ejemplo.com"
+              placeholder="Ej: vendedor@ejemplo.com"
+              required
             />
+            <p className="text-xs text-muted-foreground">
+              Este email será usado para que el vendedor inicie sesión
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="password">Contraseña *</Label>
+            <Input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="Mínimo 6 caracteres"
+              minLength={6}
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              El vendedor usará esta contraseña para acceder al sistema
+            </p>
           </div>
 
           <div className="space-y-2">
@@ -98,7 +119,7 @@ export const OperadorModal = ({ isOpen, onClose, onSave }: OperadorModalProps) =
               Cancelar
             </Button>
             <Button type="submit">
-              Crear Operador
+              Crear Vendedor
             </Button>
           </DialogFooter>
         </form>
