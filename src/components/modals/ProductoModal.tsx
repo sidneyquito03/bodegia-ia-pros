@@ -324,14 +324,14 @@ export const ProductoModal = ({ isOpen, onClose, onSave, producto }: ProductoMod
             <div className="space-y-2">
               <Label htmlFor="proveedor">Proveedor</Label>
               <Select 
-                value={formData.proveedor_id || ''} 
-                onValueChange={(value) => setFormData({ ...formData, proveedor_id: value || null })}
+                value={formData.proveedor_id || 'sin-proveedor'} 
+                onValueChange={(value) => setFormData({ ...formData, proveedor_id: value === 'sin-proveedor' ? null : value })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleccionar proveedor" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sin proveedor</SelectItem>
+                  <SelectItem value="sin-proveedor">Sin proveedor</SelectItem>
                   {proveedores.filter(p => p.activo).map((prov) => (
                     <SelectItem key={prov.id} value={prov.id}>
                       {prov.nombre}
